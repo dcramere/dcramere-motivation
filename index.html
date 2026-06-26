@@ -1,0 +1,1781 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>DCRAMERE — Daily Motivation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+/* ─── Tokens ──────────────────────────────────────────── */
+:root {
+  --gold:         #D4AF37;
+  --gold-dark:    #A8892A;
+  --gold-dim:     #7a6420;
+  --gold-hi:      #F0CC55;
+  --gold-glow:    rgba(212,175,55,0.12);
+  --near-black:   #0B0B0B;
+  --s1:           #141414;
+  --s2:           #1C1C1C;
+  --s3:           #242424;
+  --s4:           #2E2E2E;
+  --bull:         #27AE60;
+  --bull-bg:      rgba(39,174,96,0.10);
+  --bear:         #C0392B;
+  --bear-bg:      rgba(192,57,43,0.10);
+  --neutral:      #7F8C8D;
+  --text:         #EBEBEB;
+  --text-sub:     #888;
+  --text-muted:   #555;
+  --border:       #272727;
+  --border-gold:  rgba(212,175,55,0.35);
+  --radius:       12px;
+  --font-display: 'Cinzel', serif;
+  --font-body:    'Inter', sans-serif;
+  --font-mono:    'JetBrains Mono', monospace;
+}
+
+/* ─── Reset ───────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; scroll-behavior: smooth; }
+body {
+  background: var(--near-black);
+  color: var(--text);
+  font-family: var(--font-body);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+button { font-family: var(--font-body); cursor: pointer; }
+input, textarea { font-family: var(--font-body); }
+a { color: var(--gold); text-decoration: none; }
+
+/* ─── Scrollbar ───────────────────────────────────────── */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(--s1); }
+::-webkit-scrollbar-thumb { background: var(--s4); border-radius: 2px; }
+
+/* ─── Layout ──────────────────────────────────────────── */
+.app { display: flex; flex-direction: column; min-height: 100vh; }
+
+/* ─── Header ──────────────────────────────────────────── */
+.header {
+  background: var(--s1);
+  border-bottom: 1px solid var(--border);
+  padding: 0 2rem;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.logo {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+}
+.logo-text {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--gold);
+  letter-spacing: 4px;
+}
+.logo-slogan {
+  font-size: 9px;
+  letter-spacing: 3px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.date-badge {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-sub);
+  background: var(--s3);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 4px 14px;
+  letter-spacing: 1px;
+}
+.streak-badge {
+  font-size: 11px;
+  color: var(--gold);
+  background: var(--gold-glow);
+  border: 1px solid var(--border-gold);
+  border-radius: 20px;
+  padding: 4px 12px;
+  letter-spacing: 1px;
+}
+
+/* ─── Nav Tabs ────────────────────────────────────────── */
+.nav {
+  background: var(--s1);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  gap: 0;
+  padding: 0 2rem;
+  overflow-x: auto;
+}
+.nav-tab {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-sub);
+  font-size: 12px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 14px 20px;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.nav-tab:hover { color: var(--text); }
+.nav-tab.active { color: var(--gold); border-bottom-color: var(--gold); }
+
+/* ─── Pages ───────────────────────────────────────────── */
+.page { display: none; padding: 2rem; max-width: 900px; margin: 0 auto; width: 100%; }
+.page.active { display: block; }
+
+/* ─── Section Eyebrow ─────────────────────────────────── */
+.eyebrow {
+  font-size: 9px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 0.5rem;
+}
+.section-title {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: 2px;
+  margin-bottom: 1.25rem;
+}
+
+/* ─── Card ────────────────────────────────────────────── */
+.card {
+  background: var(--s2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  margin-bottom: 1.25rem;
+}
+.card.gold-accent { border-top: 2px solid var(--gold); }
+.card.gold-border { border-color: var(--border-gold); }
+
+/* ─── Quote Card ──────────────────────────────────────── */
+.quote-card {
+  background: var(--s2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 2rem;
+  margin-bottom: 1.25rem;
+  position: relative;
+  overflow: hidden;
+}
+.quote-card::after {
+  content: '\201C';
+  position: absolute;
+  top: -10px;
+  right: 20px;
+  font-size: 120px;
+  font-family: var(--font-display);
+  color: var(--border);
+  line-height: 1;
+  pointer-events: none;
+}
+.quote-bar {
+  height: 2px;
+  background: linear-gradient(90deg, var(--gold-dark), var(--gold-hi), transparent);
+  margin-bottom: 1.5rem;
+  border-radius: 1px;
+}
+.quote-text {
+  font-size: 1.25rem;
+  line-height: 1.7;
+  color: var(--text);
+  font-style: italic;
+  margin-bottom: 1rem;
+  position: relative;
+  z-index: 1;
+}
+.quote-author {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--gold);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+.quote-category {
+  display: inline-block;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--gold-dark);
+  background: var(--gold-glow);
+  border: 1px solid var(--border-gold);
+  border-radius: 4px;
+  padding: 2px 8px;
+  margin-bottom: 1rem;
+}
+.quote-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 1.25rem;
+  flex-wrap: wrap;
+}
+
+/* ─── Buttons ─────────────────────────────────────────── */
+.btn {
+  background: var(--s3);
+  border: 1px solid var(--border);
+  color: var(--text-sub);
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 12px;
+  letter-spacing: 0.5px;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.btn:hover { border-color: var(--gold); color: var(--gold); background: var(--gold-glow); }
+.btn-gold {
+  background: var(--gold-glow);
+  border-color: var(--border-gold);
+  color: var(--gold);
+}
+.btn-gold:hover { background: rgba(212,175,55,0.22); }
+.btn-solid {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: var(--near-black);
+  font-weight: 600;
+}
+.btn-solid:hover { background: var(--gold-hi); border-color: var(--gold-hi); }
+.btn-sm { padding: 5px 12px; font-size: 11px; }
+
+/* ─── Metrics Row ─────────────────────────────────────── */
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 1.25rem;
+}
+.metric-card {
+  background: var(--s2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.1rem;
+  text-align: center;
+}
+.metric-val {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 600;
+  color: var(--gold);
+  line-height: 1;
+  margin-bottom: 6px;
+}
+.metric-label {
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+/* ─── Mood ────────────────────────────────────────────── */
+.mood-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+  margin-bottom: 1.25rem;
+}
+.mood-btn {
+  background: var(--s2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 8px;
+  text-align: center;
+  transition: all 0.2s;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.mood-icon { font-size: 22px; line-height: 1; }
+.mood-name { font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-sub); }
+.mood-btn:hover { border-color: var(--border-gold); }
+.mood-btn.selected { border-color: var(--gold); background: var(--gold-glow); }
+.mood-btn.selected .mood-name { color: var(--gold); }
+
+/* ─── Affirmations ────────────────────────────────────── */
+.input-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.field {
+  flex: 1;
+  background: var(--s3);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 14px;
+  color: var(--text);
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.field:focus { border-color: var(--border-gold); }
+.field::placeholder { color: var(--text-muted); }
+.field-full { width: 100%; }
+textarea.field { resize: vertical; min-height: 90px; }
+.affirm-list { display: flex; flex-direction: column; gap: 6px; }
+.affirm-item {
+  background: var(--s3);
+  border-left: 2px solid var(--gold-dark);
+  border-radius: 0 8px 8px 0;
+  padding: 10px 14px;
+  font-size: 13px;
+  color: var(--text-sub);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  animation: slideIn 0.25s ease;
+}
+@keyframes slideIn { from { opacity:0; transform: translateX(-8px); } to { opacity:1; transform: translateX(0); } }
+.affirm-text { flex: 1; line-height: 1.5; }
+.del-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 16px;
+  cursor: pointer;
+  padding: 2px 4px;
+  line-height: 1;
+  transition: color 0.2s;
+  flex-shrink: 0;
+}
+.del-btn:hover { color: var(--bear); }
+
+/* ─── Journal ─────────────────────────────────────────── */
+.journal-list { display: flex; flex-direction: column; gap: 10px; }
+.journal-entry {
+  background: var(--s3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem 1.25rem;
+  animation: slideIn 0.25s ease;
+}
+.journal-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.journal-date { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); letter-spacing: 1px; }
+.journal-mood-tag {
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--gold-dark);
+  background: var(--gold-glow);
+  border: 1px solid var(--border-gold);
+  border-radius: 4px;
+  padding: 2px 8px;
+}
+.journal-body { font-size: 13px; color: var(--text-sub); line-height: 1.65; }
+.empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--text-muted);
+  font-size: 13px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+}
+.empty-icon { font-size: 32px; margin-bottom: 0.75rem; }
+
+/* ─── Goals ───────────────────────────────────────────── */
+.goal-list { display: flex; flex-direction: column; gap: 8px; }
+.goal-item {
+  background: var(--s3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  cursor: pointer;
+  transition: border-color 0.2s;
+  animation: slideIn 0.25s ease;
+}
+.goal-item:hover { border-color: var(--border-gold); }
+.goal-item.done { opacity: 0.5; }
+.goal-check {
+  width: 20px;
+  height: 20px;
+  border: 1.5px solid var(--border-gold);
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  background: transparent;
+}
+.goal-item.done .goal-check { background: var(--gold); border-color: var(--gold); }
+.goal-check-mark { font-size: 10px; color: var(--near-black); display: none; }
+.goal-item.done .goal-check-mark { display: block; }
+.goal-body { flex: 1; }
+.goal-text { font-size: 13px; color: var(--text); margin-bottom: 3px; }
+.goal-item.done .goal-text { text-decoration: line-through; color: var(--text-muted); }
+.goal-meta { font-size: 10px; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; }
+.goal-category {
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid;
+  flex-shrink: 0;
+}
+.goal-category.trading { color: var(--bull); border-color: rgba(39,174,96,0.3); background: var(--bull-bg); }
+.goal-category.mindset { color: var(--gold); border-color: var(--border-gold); background: var(--gold-glow); }
+.goal-category.health  { color: #3498DB; border-color: rgba(52,152,219,0.3); background: rgba(52,152,219,0.08); }
+
+/* ─── Progress Chart ──────────────────────────────────── */
+.chart-wrap {
+  position: relative;
+  height: 200px;
+  padding: 0.5rem 0;
+}
+
+/* ─── Market Strip ────────────────────────────────────── */
+.market-strip {
+  background: var(--s2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem 1.25rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 1.25rem;
+}
+.mkt-item { text-align: center; }
+.mkt-label { font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px; }
+.mkt-val { font-family: var(--font-mono); font-size: 13px; font-weight: 500; }
+.up { color: var(--bull); }
+.dn { color: var(--bear); }
+.neu { color: var(--neutral); }
+
+/* ─── Category Tabs ───────────────────────────────────── */
+.cat-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+}
+.cat-tab {
+  background: var(--s3);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  color: var(--text-sub);
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 5px 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.cat-tab:hover { border-color: var(--border-gold); color: var(--gold); }
+.cat-tab.active { background: var(--gold-glow); border-color: var(--border-gold); color: var(--gold); }
+
+/* ─── Progress Bar ────────────────────────────────────── */
+.progress-wrap { margin-bottom: 1rem; }
+.progress-label { display: flex; justify-content: space-between; margin-bottom: 6px; }
+.progress-name { font-size: 12px; color: var(--text-sub); }
+.progress-pct { font-family: var(--font-mono); font-size: 11px; color: var(--gold); }
+.progress-bar { height: 4px; background: var(--s4); border-radius: 2px; overflow: hidden; }
+.progress-fill { height: 100%; background: linear-gradient(90deg, var(--gold-dark), var(--gold-hi)); border-radius: 2px; transition: width 0.6s ease; }
+
+/* ─── Toast ───────────────────────────────────────────── */
+#toast {
+  position: fixed;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%) translateY(10px);
+  background: var(--s3);
+  border: 1px solid var(--border-gold);
+  color: var(--gold);
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 10px 24px;
+  border-radius: 24px;
+  opacity: 0;
+  transition: all 0.3s ease;
+  pointer-events: none;
+  z-index: 999;
+  white-space: nowrap;
+}
+#toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ─── Select ──────────────────────────────────────────── */
+select.field {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23555' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 32px;
+}
+select.field option { background: var(--s2); color: var(--text); }
+
+/* ─── Divider ─────────────────────────────────────────── */
+.divider { height: 1px; background: var(--border); margin: 1.5rem 0; }
+
+/* ─── Two col ─────────────────────────────────────────── */
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+
+/* ─── Responsive ──────────────────────────────────────── */
+@media (max-width: 640px) {
+  .header { padding: 0 1rem; }
+  .page { padding: 1rem; }
+  .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+  .mood-grid { grid-template-columns: repeat(3, 1fr); }
+  .two-col { grid-template-columns: 1fr; }
+  .logo-slogan { display: none; }
+  .nav { padding: 0 1rem; }
+}
+
+/* ─── Share Studio ────────────────────────────────────── */
+.share-social { transition: all 0.2s; }
+.share-social:hover { filter: brightness(1.2); background: rgba(255,255,255,0.04); }
+#share-overlay.show { display: flex; }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- Header -->
+  <header class="header">
+    <div class="logo">
+      <div class="logo-text">DCRAMERE</div>
+      <div class="logo-slogan">See · Decipher · Trade</div>
+    </div>
+    <div class="header-right">
+      <div class="streak-badge" id="streak-badge">🔥 Day 1</div>
+      <div class="date-badge" id="date-badge">—</div>
+    </div>
+  </header>
+
+  <!-- Nav -->
+  <nav class="nav">
+    <button class="nav-tab active" onclick="showPage('home', this)">Today</button>
+    <button class="nav-tab" onclick="showPage('quotes', this)">Quotes</button>
+    <button class="nav-tab" onclick="showPage('journal', this)">Journal</button>
+    <button class="nav-tab" onclick="showPage('goals', this)">Goals</button>
+    <button class="nav-tab" onclick="showPage('progress', this)">Progress</button>
+    <button class="nav-tab" onclick="showPage('share', this)">Share</button>
+  </nav>
+
+  <!-- ══ PAGE: HOME ══ -->
+  <div class="page active" id="page-home">
+
+    <!-- Quote -->
+    <div class="quote-card gold-accent">
+      <div class="quote-bar"></div>
+      <div class="quote-category" id="q-category">Trading</div>
+      <div class="quote-text" id="q-text">Loading your signal…</div>
+      <div class="quote-author" id="q-author">— DCRAMERE</div>
+      <div class="quote-actions">
+        <button class="btn" onclick="nextQuote()">↺ &nbsp;New signal</button>
+        <button class="btn btn-gold" onclick="saveQuote()">★ &nbsp;Save quote</button>
+        <button class="btn" onclick="copyQuote()">⧉ &nbsp;Copy</button>
+      </div>
+      <div style="margin-top:10px; font-size:10px; color:var(--text-muted); letter-spacing:1px;" id="cms-status">● Loading…</div>
+    </div>
+
+    <!-- Metrics -->
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <div class="metric-val" id="m-streak">1</div>
+        <div class="metric-label">Day streak</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-val" id="m-saved">0</div>
+        <div class="metric-label">Saved quotes</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-val" id="m-goals">0</div>
+        <div class="metric-label">Goals done</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-val" id="m-journal">0</div>
+        <div class="metric-label">Journal entries</div>
+      </div>
+    </div>
+
+    <!-- Mood -->
+    <div class="eyebrow">State of mind</div>
+    <div class="mood-grid" id="mood-grid">
+      <div class="mood-btn" onclick="selectMood(this,'Focused','🎯')">
+        <div class="mood-icon">🎯</div><div class="mood-name">Focused</div>
+      </div>
+      <div class="mood-btn" onclick="selectMood(this,'Confident','⚡')">
+        <div class="mood-icon">⚡</div><div class="mood-name">Confident</div>
+      </div>
+      <div class="mood-btn" onclick="selectMood(this,'Cautious','🔍')">
+        <div class="mood-icon">🔍</div><div class="mood-name">Cautious</div>
+      </div>
+      <div class="mood-btn" onclick="selectMood(this,'Resilient','🛡️')">
+        <div class="mood-icon">🛡️</div><div class="mood-name">Resilient</div>
+      </div>
+      <div class="mood-btn" onclick="selectMood(this,'Flow','🌊')">
+        <div class="mood-icon">🌊</div><div class="mood-name">Flow</div>
+      </div>
+    </div>
+
+    <!-- Market strip -->
+    <div class="market-strip">
+      <div class="mkt-item">
+        <div class="mkt-label">Market mood</div>
+        <div class="mkt-val" id="mkt-mood">—</div>
+      </div>
+      <div class="mkt-item">
+        <div class="mkt-label">Signal</div>
+        <div class="mkt-val" id="mkt-signal">—</div>
+      </div>
+      <div class="mkt-item">
+        <div class="mkt-label">Today's edge</div>
+        <div class="mkt-val" id="mkt-edge">—</div>
+      </div>
+      <div class="mkt-item">
+        <div class="mkt-label">Mindset score</div>
+        <div class="mkt-val up" id="mkt-score">—</div>
+      </div>
+    </div>
+
+    <!-- Quick affirmations -->
+    <div class="eyebrow">Daily affirmations</div>
+    <div class="input-row">
+      <input class="field" id="home-affirm-input" placeholder="I am disciplined, patient, and decisive…" />
+      <button class="btn btn-gold" onclick="addAffirmation()">+ Add</button>
+    </div>
+    <div class="affirm-list" id="home-affirm-list"></div>
+  </div>
+
+  <!-- ══ PAGE: QUOTES ══ -->
+  <div class="page" id="page-quotes">
+    <div class="eyebrow">Quote vault</div>
+    <div class="section-title">Saved signals</div>
+
+    <div class="cat-tabs">
+      <button class="cat-tab active" onclick="filterQuotes('all', this)">All</button>
+      <button class="cat-tab" onclick="filterQuotes('Trading', this)">Trading</button>
+      <button class="cat-tab" onclick="filterQuotes('Mindset', this)">Mindset</button>
+      <button class="cat-tab" onclick="filterQuotes('Discipline', this)">Discipline</button>
+      <button class="cat-tab" onclick="filterQuotes('Philosophy', this)">Philosophy</button>
+    </div>
+
+    <div id="quotes-list">
+      <div class="empty-state">
+        <div class="empty-icon">★</div>
+        Save quotes from the Today tab to build your vault.
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ PAGE: JOURNAL ══ -->
+  <div class="page" id="page-journal">
+    <div class="eyebrow">Trading journal</div>
+    <div class="section-title">Daily reflections</div>
+
+    <div class="card">
+      <div class="eyebrow" style="margin-bottom:0.75rem">New entry</div>
+      <select class="field" id="j-mood" style="margin-bottom:10px">
+        <option value="">— Today's state of mind —</option>
+        <option value="Focused 🎯">Focused 🎯</option>
+        <option value="Confident ⚡">Confident ⚡</option>
+        <option value="Cautious 🔍">Cautious 🔍</option>
+        <option value="Resilient 🛡️">Resilient 🛡️</option>
+        <option value="Flow 🌊">Flow 🌊</option>
+      </select>
+      <textarea class="field field-full" id="j-body" placeholder="What did the market teach you today? What did you execute well? What will you refine?"></textarea>
+      <div style="margin-top:10px; display:flex; gap:8px;">
+        <button class="btn btn-solid" onclick="addJournalEntry()">Save entry</button>
+        <button class="btn" onclick="clearJournal()">Clear</button>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+    <div class="eyebrow" style="margin-bottom:0.75rem">Past entries</div>
+    <div class="journal-list" id="journal-list">
+      <div class="empty-state">
+        <div class="empty-icon">📓</div>
+        No entries yet. Write your first reflection above.
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ PAGE: GOALS ══ -->
+  <div class="page" id="page-goals">
+    <div class="eyebrow">Goal tracker</div>
+    <div class="section-title">Targets &amp; milestones</div>
+
+    <div class="card">
+      <div class="eyebrow" style="margin-bottom:0.75rem">New goal</div>
+      <input class="field field-full" id="g-text" placeholder="What do you want to achieve?" style="margin-bottom:10px" />
+      <div class="two-col">
+        <select class="field" id="g-category">
+          <option value="trading">Trading</option>
+          <option value="mindset">Mindset</option>
+          <option value="health">Health</option>
+        </select>
+        <select class="field" id="g-timeframe">
+          <option value="Daily">Daily</option>
+          <option value="Weekly">Weekly</option>
+          <option value="Monthly">Monthly</option>
+          <option value="Yearly">Yearly</option>
+        </select>
+      </div>
+      <button class="btn btn-solid" style="margin-top:10px" onclick="addGoal()">Add goal</button>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="cat-tabs">
+      <button class="cat-tab active" onclick="filterGoals('all', this)">All</button>
+      <button class="cat-tab" onclick="filterGoals('trading', this)">Trading</button>
+      <button class="cat-tab" onclick="filterGoals('mindset', this)">Mindset</button>
+      <button class="cat-tab" onclick="filterGoals('health', this)">Health</button>
+    </div>
+
+    <div class="goal-list" id="goal-list">
+      <div class="empty-state">
+        <div class="empty-icon">🎯</div>
+        No goals yet. Set your first target above.
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ PAGE: PROGRESS ══ -->
+  <div class="page" id="page-progress">
+    <div class="eyebrow">Progress overview</div>
+    <div class="section-title">Your momentum</div>
+
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <div class="metric-val" id="p-streak">1</div>
+        <div class="metric-label">Day streak</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-val" id="p-goals-done">0</div>
+        <div class="metric-label">Goals done</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-val" id="p-journal-count">0</div>
+        <div class="metric-label">Journal entries</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-val" id="p-saved">0</div>
+        <div class="metric-label">Saved quotes</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="eyebrow" style="margin-bottom:1rem">Mood frequency (last 7 entries)</div>
+      <div class="chart-wrap">
+        <canvas id="mood-chart"></canvas>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="eyebrow" style="margin-bottom:1rem">Goals by category</div>
+      <div id="goal-progress"></div>
+    </div>
+
+    <div class="card">
+      <div class="eyebrow" style="margin-bottom:1rem">Discipline matrix</div>
+      <div id="discipline-grid" style="display:grid; grid-template-columns: repeat(7, 1fr); gap:4px;"></div>
+      <div style="margin-top:10px; font-size:10px; color:var(--text-muted); letter-spacing:1px;">Each cell = 1 day active. Gold = active, dark = inactive.</div>
+    </div>
+  </div>
+
+  <!-- ══ PAGE: SHARE ══ -->
+  <div class="page" id="page-share">
+    <div class="eyebrow">Share studio</div>
+    <div class="section-title">Create social images</div>
+
+    <!-- Quote selector -->
+    <div class="card" style="margin-bottom:1rem">
+      <div class="eyebrow" style="margin-bottom:0.75rem">Quote to share</div>
+      <select class="field field-full" id="share-quote-select" onchange="updateSharePreview()">
+      </select>
+      <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">
+        <button class="btn btn-sm" onclick="shareQuoteRandom()">↺ Random quote</button>
+        <button class="btn btn-sm btn-gold" onclick="shareCurrentQuote()">Use today's signal</button>
+      </div>
+    </div>
+
+    <!-- Format + Template row -->
+    <div class="two-col" style="margin-bottom:1rem">
+      <div>
+        <div class="eyebrow" style="margin-bottom:0.5rem">Format</div>
+        <div class="cat-tabs" style="margin-bottom:0">
+          <button class="cat-tab active" onclick="setShareFormat('story', this)" title="9:16 — Instagram/Facebook Story, TikTok">Story 9:16</button>
+          <button class="cat-tab" onclick="setShareFormat('square', this)" title="1:1 — Instagram Feed, Facebook">Square 1:1</button>
+          <button class="cat-tab" onclick="setShareFormat('post', this)" title="4:5 — Instagram Feed Portrait">Post 4:5</button>
+        </div>
+      </div>
+      <div>
+        <div class="eyebrow" style="margin-bottom:0.5rem">Template</div>
+        <div class="cat-tabs" style="margin-bottom:0">
+          <button class="cat-tab active" onclick="setShareTemplate('dark', this)">Dark gold</button>
+          <button class="cat-tab" onclick="setShareTemplate('minimal', this)">Minimal</button>
+          <button class="cat-tab" onclick="setShareTemplate('bold', this)">Bold</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Canvas preview -->
+    <div style="display:flex; justify-content:center; margin-bottom:1.25rem;">
+      <div style="position:relative; display:inline-block;">
+        <canvas id="share-canvas" style="border-radius:12px; display:block; max-width:100%; max-height:520px; border:1px solid var(--border-gold);"></canvas>
+        <div id="share-rendering" style="display:none; position:absolute; inset:0; background:rgba(0,0,0,0.6); border-radius:12px; align-items:center; justify-content:center; color:var(--gold); font-size:12px; letter-spacing:2px; text-transform:uppercase;">Rendering…</div>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="card gold-border">
+      <div class="eyebrow" style="margin-bottom:0.75rem">Download &amp; share</div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:1rem;">
+        <button class="btn btn-solid" onclick="downloadShareImage()">⬇ Download image</button>
+        <button class="btn btn-gold" onclick="copyShareImage()">⧉ Copy image</button>
+      </div>
+      <div class="eyebrow" style="margin-bottom:0.5rem">Open &amp; paste on</div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;" id="social-buttons">
+        <button class="btn share-social" data-platform="whatsapp" onclick="openSocial('whatsapp')" style="border-color:#25D366; color:#25D366;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+          WhatsApp
+        </button>
+        <button class="btn share-social" data-platform="facebook" onclick="openSocial('facebook')" style="border-color:#1877F2; color:#1877F2;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+          Facebook
+        </button>
+        <button class="btn share-social" data-platform="instagram" onclick="openSocial('instagram')" style="border-color:#E1306C; color:#E1306C;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+          Instagram
+        </button>
+        <button class="btn share-social" data-platform="twitter" onclick="openSocial('twitter')" style="border-color:#1DA1F2; color:#1DA1F2;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.737-8.835L1.254 2.25H8.08l4.259 5.63zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+          X (Twitter)
+        </button>
+        <button class="btn share-social" data-platform="linkedin" onclick="openSocial('linkedin')" style="border-color:#0A66C2; color:#0A66C2;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+          LinkedIn
+        </button>
+        <button class="btn share-social" data-platform="tiktok" onclick="openSocial('tiktok')" style="border-color:#69C9D0; color:#69C9D0;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.24 8.24 0 004.83 1.56V6.81a4.85 4.85 0 01-1.06-.12z"/></svg>
+          TikTok
+        </button>
+      </div>
+      <div style="margin-top:10px; font-size:11px; color:var(--text-muted); line-height:1.6;">
+        Download the image first, then paste it when the platform opens. Instagram &amp; TikTok require the mobile app.
+      </div>
+    </div>
+  </div>
+
+</div><!-- /app -->
+
+<!-- Share modal overlay (hidden) -->
+<div id="share-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.75); z-index:200; align-items:center; justify-content:center; padding:1rem;">
+  <div style="background:var(--s2); border:1px solid var(--border-gold); border-radius:16px; padding:1.5rem; max-width:400px; width:100%; position:relative;">
+    <button onclick="closeShareOverlay()" style="position:absolute; top:12px; right:14px; background:none; border:none; color:var(--text-sub); font-size:20px; cursor:pointer; line-height:1;">✕</button>
+    <div class="eyebrow" style="margin-bottom:0.5rem" id="overlay-title">Share</div>
+    <div style="font-size:13px; color:var(--text-sub); margin-bottom:1rem; line-height:1.6;" id="overlay-instructions"></div>
+    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+      <button class="btn btn-solid" onclick="downloadShareImage(); closeShareOverlay();">⬇ Download image</button>
+      <button class="btn" onclick="closeShareOverlay()">Close</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ─── State ───────────────────────────────────────────────
+const S = {
+  streak: 1,
+  savedQuotes: [],
+  affirmations: [],
+  journal: [],
+  goals: [],
+  moods: [],
+  currentMood: null,
+  quoteIdx: 0,
+  goalFilter: 'all',
+  quoteFilter: 'all',
+};
+
+// ─── Sanity CMS config ────────────────────────────────────
+// After completing Sanity setup, replace YOUR_PROJECT_ID below.
+// Leave SANITY_DATASET as 'production' unless you created a different one.
+const SANITY_PROJECT_ID = 'YOUR_PROJECT_ID';
+const SANITY_DATASET    = 'production';
+const SANITY_API_VER    = '2024-01-01';
+
+// ─── Fallback quotes (used when Sanity isn't configured yet) ──
+const FALLBACK_QUOTES = [
+  { text: "The market can stay irrational longer than you can stay solvent — but patience is its own edge.", author: "Adapted from Keynes", category: "Trading" },
+  { text: "Price is what you pay. Value is what you get.", author: "Warren Buffett", category: "Trading" },
+  { text: "Risk comes from not knowing what you're doing.", author: "Warren Buffett", category: "Trading" },
+  { text: "The trend is your friend until the bend at the end.", author: "Ed Seykota", category: "Trading" },
+  { text: "Cut your losses short and let your winners run.", author: "Jesse Livermore", category: "Trading" },
+  { text: "The best traders have no ego. The chart is always right.", author: "Anonymous", category: "Trading" },
+  { text: "In trading as in life — the position you hold most is yourself.", author: "DCRAMERE", category: "Trading" },
+  { text: "See clearly. Act decisively. Win consistently.", author: "DCRAMERE", category: "Mindset" },
+  { text: "Your only competition is who you were yesterday.", author: "DCRAMERE", category: "Mindset" },
+  { text: "Discipline is choosing between what you want now and what you want most.", author: "Abraham Lincoln", category: "Discipline" },
+  { text: "In the middle of every difficulty lies opportunity.", author: "Albert Einstein", category: "Mindset" },
+  { text: "The secret of getting ahead is getting started.", author: "Mark Twain", category: "Mindset" },
+  { text: "Do not pray for an easy life. Pray for the strength to endure a difficult one.", author: "Bruce Lee", category: "Mindset" },
+  { text: "He who masters himself is stronger than he who conquers a city.", author: "Proverbs 16:32", category: "Philosophy" },
+  { text: "Every master was once a disaster.", author: "T. Harv Eker", category: "Mindset" },
+  { text: "Opportunities multiply as they are seized.", author: "Sun Tzu", category: "Philosophy" },
+  { text: "The empty vessel makes the loudest noise.", author: "Shakespeare", category: "Philosophy" },
+  { text: "An investment in knowledge pays the best interest.", author: "Benjamin Franklin", category: "Trading" },
+  { text: "It's not what happens to you, but how you react to it that matters.", author: "Epictetus", category: "Philosophy" },
+  { text: "We suffer more in imagination than in reality.", author: "Seneca", category: "Philosophy" },
+  { text: "Absorb what is useful. Discard what is not. Add what is uniquely your own.", author: "Bruce Lee", category: "Discipline" },
+  { text: "First, master the fundamentals.", author: "Larry Bird", category: "Discipline" },
+  { text: "Routine is not the enemy of creativity — it is the foundation of it.", author: "DCRAMERE", category: "Discipline" },
+  { text: "The goal is not to predict the market. The goal is to be ready for it.", author: "DCRAMERE", category: "Trading" },
+  { text: "Capital preservation is the first rule. Growth follows.", author: "Anonymous", category: "Trading" },
+];
+
+// Live quotes — starts as fallback, replaced by Sanity data when loaded
+let QUOTES = [...FALLBACK_QUOTES];
+
+// ─── Fetch quotes from Sanity ─────────────────────────────
+async function fetchSanityQuotes() {
+  if (SANITY_PROJECT_ID === 'YOUR_PROJECT_ID') return; // not configured yet
+
+  const query = encodeURIComponent(
+    `*[_type == "quote" && active == true] | order(_createdAt asc) { text, author, category, featured }`
+  );
+  const url = `https://${SANITY_PROJECT_ID}.api.sanity.io/v${SANITY_API_VER}/data/query/${SANITY_DATASET}?query=${query}`;
+
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('Sanity fetch failed: ' + res.status);
+    const data = await res.json();
+    if (data.result && data.result.length > 0) {
+      QUOTES = data.result.map(q => ({
+        text: q.text,
+        author: q.author,
+        category: q.category || 'Trading',
+        featured: q.featured || false,
+      }));
+      // Re-render with fresh quotes
+      S.quoteIdx = Math.floor(Math.random() * QUOTES.length);
+      renderQuote();
+      updateCmsStatus(true, QUOTES.length);
+    }
+  } catch (err) {
+    console.warn('Sanity not reachable, using built-in quotes.', err.message);
+    updateCmsStatus(false, FALLBACK_QUOTES.length);
+  }
+}
+
+function updateCmsStatus(live, count) {
+  const el = document.getElementById('cms-status');
+  if (!el) return;
+  if (live) {
+    el.innerHTML = `<span style="color:var(--bull)">● Live</span> — ${count} quotes from Sanity CMS`;
+  } else {
+    el.innerHTML = `<span style="color:var(--text-muted)">● Built-in</span> — ${count} quotes (connect Sanity to enable live updates)`;
+  }
+}
+
+// ─── Mood maps ────────────────────────────────────────────
+const MOOD_MAP = {
+  'Focused':   { mkt:'Bullish', signal:'▲ Risk-on', edge:'Execution', score:'88', cls:'up' },
+  'Confident': { mkt:'Bullish', signal:'▲ Breakout', edge:'Momentum', score:'92', cls:'up' },
+  'Cautious':  { mkt:'Neutral', signal:'◆ Range', edge:'Patience', score:'74', cls:'neu' },
+  'Resilient': { mkt:'Neutral', signal:'◆ Recovery', edge:'Defense', score:'80', cls:'neu' },
+  'Flow':      { mkt:'Bullish', signal:'▲ Trend', edge:'Clarity', score:'95', cls:'up' },
+};
+
+// ─── Init ─────────────────────────────────────────────────
+function init() {
+  loadState();
+  setDate();
+  S.quoteIdx = Math.floor(Math.random() * QUOTES.length);
+  renderQuote();
+  renderAffirmations();
+  renderMetrics();
+  updateMarketStrip();
+  buildDisciplineGrid();
+  updateCmsStatus(false, FALLBACK_QUOTES.length);
+  fetchSanityQuotes(); // async — updates quotes silently in background
+}
+
+function setDate() {
+  const d = new Date();
+  const opts = { weekday:'short', year:'numeric', month:'short', day:'numeric' };
+  document.getElementById('date-badge').textContent = d.toLocaleDateString('en-US', opts).toUpperCase();
+}
+
+// ─── Persist ──────────────────────────────────────────────
+function saveState() {
+  try { localStorage.setItem('dcramere', JSON.stringify(S)); } catch(e){}
+}
+function loadState() {
+  try {
+    const raw = localStorage.getItem('dcramere');
+    if (raw) {
+      const saved = JSON.parse(raw);
+      Object.assign(S, saved);
+    }
+  } catch(e){}
+  // check streak
+  const today = new Date().toDateString();
+  const lastVisit = localStorage.getItem('dcramere-last-visit');
+  if (!lastVisit) {
+    S.streak = 1;
+  } else if (lastVisit !== today) {
+    const last = new Date(lastVisit);
+    const diff = (new Date() - last) / 86400000;
+    if (diff < 2) { S.streak = (S.streak || 0) + 1; }
+    else { S.streak = 1; }
+  }
+  localStorage.setItem('dcramere-last-visit', today);
+  document.getElementById('streak-badge').textContent = '🔥 Day ' + S.streak;
+}
+
+// ─── Pages ────────────────────────────────────────────────
+function showPage(name, tab) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  if (tab) tab.classList.add('active');
+
+  if (name === 'progress') renderProgress();
+  if (name === 'quotes') renderSavedQuotes();
+  if (name === 'goals') renderGoals();
+  if (name === 'journal') renderJournal();
+}
+
+// ─── Quotes ───────────────────────────────────────────────
+function renderQuote() {
+  const q = QUOTES[S.quoteIdx];
+  document.getElementById('q-text').textContent = '\u201C' + q.text + '\u201D';
+  document.getElementById('q-author').textContent = '— ' + q.author;
+  document.getElementById('q-category').textContent = q.category;
+}
+function nextQuote() {
+  S.quoteIdx = (S.quoteIdx + 1) % QUOTES.length;
+  renderQuote();
+  toast('New signal');
+}
+function saveQuote() {
+  const q = QUOTES[S.quoteIdx];
+  const exists = S.savedQuotes.find(sq => sq.text === q.text);
+  if (exists) { toast('Already saved'); return; }
+  S.savedQuotes.push({ ...q, savedAt: new Date().toISOString() });
+  renderMetrics();
+  saveState();
+  toast('Quote saved ★');
+}
+function copyQuote() {
+  const q = QUOTES[S.quoteIdx];
+  const str = '\u201C' + q.text + '\u201D\n— ' + q.author + '\n\nDCRAMERE | SEE. DECIPHER. TRADE.';
+  if (navigator.clipboard) navigator.clipboard.writeText(str);
+  toast('Copied to clipboard');
+}
+function filterQuotes(cat, el) {
+  document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
+  if (el) el.classList.add('active');
+  S.quoteFilter = cat;
+  renderSavedQuotes();
+}
+function renderSavedQuotes() {
+  const list = document.getElementById('quotes-list');
+  let quotes = S.savedQuotes;
+  if (S.quoteFilter !== 'all') quotes = quotes.filter(q => q.category === S.quoteFilter);
+  if (!quotes.length) {
+    list.innerHTML = '<div class="empty-state"><div class="empty-icon">★</div>No saved quotes in this category yet.</div>';
+    return;
+  }
+  list.innerHTML = quotes.map((q, i) => `
+    <div class="card" style="margin-bottom:10px">
+      <div class="quote-category">${q.category}</div>
+      <div style="font-style:italic; font-size:14px; color:var(--text); line-height:1.65; margin-bottom:8px;">\u201C${q.text}\u201D</div>
+      <div style="font-family:var(--font-mono); font-size:10px; color:var(--gold);">— ${q.author}</div>
+      <div style="margin-top:10px; display:flex; gap:6px;">
+        <button class="btn btn-sm" onclick="removeSavedQuote(${i})">✕ Remove</button>
+        <button class="btn btn-sm btn-gold" onclick="copySpecific(${i})">⧉ Copy</button>
+      </div>
+    </div>
+  `).join('');
+}
+function removeSavedQuote(i) {
+  S.savedQuotes.splice(i, 1);
+  renderSavedQuotes();
+  renderMetrics();
+  saveState();
+  toast('Removed');
+}
+function copySpecific(i) {
+  const q = S.savedQuotes[i];
+  const str = '\u201C' + q.text + '\u201D\n— ' + q.author + '\n\nDCRAMERE | SEE. DECIPHER. TRADE.';
+  if (navigator.clipboard) navigator.clipboard.writeText(str);
+  toast('Copied');
+}
+
+// ─── Mood ─────────────────────────────────────────────────
+function selectMood(el, mood, icon) {
+  document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  S.currentMood = mood;
+  S.moods.push({ mood, icon, at: new Date().toISOString() });
+  updateMarketStrip();
+  saveState();
+  toast('State: ' + mood);
+}
+function updateMarketStrip() {
+  const m = S.currentMood ? MOOD_MAP[S.currentMood] : { mkt:'—', signal:'—', edge:'—', score:'—', cls:'' };
+  document.getElementById('mkt-mood').textContent = m.mkt;
+  document.getElementById('mkt-mood').className = 'mkt-val ' + m.cls;
+  document.getElementById('mkt-signal').textContent = m.signal;
+  document.getElementById('mkt-signal').className = 'mkt-val ' + m.cls;
+  document.getElementById('mkt-edge').textContent = m.edge;
+  document.getElementById('mkt-score').textContent = m.score;
+}
+
+// ─── Affirmations ─────────────────────────────────────────
+function addAffirmation() {
+  const inp = document.getElementById('home-affirm-input');
+  const val = inp.value.trim();
+  if (!val) return;
+  S.affirmations.push({ text: val, at: new Date().toISOString() });
+  inp.value = '';
+  renderAffirmations();
+  saveState();
+  toast('Affirmation added');
+}
+function removeAffirmation(i) {
+  S.affirmations.splice(i, 1);
+  renderAffirmations();
+  saveState();
+}
+function renderAffirmations() {
+  const list = document.getElementById('home-affirm-list');
+  if (!S.affirmations.length) { list.innerHTML = ''; return; }
+  list.innerHTML = S.affirmations.map((a, i) => `
+    <div class="affirm-item">
+      <span class="affirm-text">${a.text}</span>
+      <button class="del-btn" onclick="removeAffirmation(${i})">✕</button>
+    </div>
+  `).join('');
+}
+// keyboard support
+document.addEventListener('keydown', e => {
+  if (e.target.id === 'home-affirm-input' && e.key === 'Enter') addAffirmation();
+  if (e.target.id === 'g-text' && e.key === 'Enter') addGoal();
+});
+
+// ─── Journal ──────────────────────────────────────────────
+function addJournalEntry() {
+  const mood = document.getElementById('j-mood').value;
+  const body = document.getElementById('j-body').value.trim();
+  if (!body) { toast('Write something first'); return; }
+  S.journal.unshift({ mood, body, at: new Date().toISOString() });
+  document.getElementById('j-mood').value = '';
+  document.getElementById('j-body').value = '';
+  renderJournal();
+  renderMetrics();
+  saveState();
+  toast('Entry saved');
+}
+function clearJournal() {
+  document.getElementById('j-mood').value = '';
+  document.getElementById('j-body').value = '';
+}
+function renderJournal() {
+  const list = document.getElementById('journal-list');
+  if (!S.journal.length) {
+    list.innerHTML = '<div class="empty-state"><div class="empty-icon">📓</div>No entries yet. Write your first reflection above.</div>';
+    return;
+  }
+  list.innerHTML = S.journal.map((e, i) => {
+    const d = new Date(e.at);
+    const ds = d.toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric', year:'numeric' }).toUpperCase();
+    return `
+      <div class="journal-entry">
+        <div class="journal-meta">
+          <div class="journal-date">${ds}</div>
+          ${e.mood ? `<div class="journal-mood-tag">${e.mood}</div>` : ''}
+        </div>
+        <div class="journal-body">${e.body.replace(/\n/g, '<br/>')}</div>
+        <div style="margin-top:8px;">
+          <button class="btn btn-sm" onclick="deleteJournalEntry(${i})" style="color:var(--bear); border-color:rgba(192,57,43,0.3)">✕ Delete</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+function deleteJournalEntry(i) {
+  S.journal.splice(i, 1);
+  renderJournal();
+  renderMetrics();
+  saveState();
+  toast('Entry deleted');
+}
+
+// ─── Goals ────────────────────────────────────────────────
+function addGoal() {
+  const text = document.getElementById('g-text').value.trim();
+  const category = document.getElementById('g-category').value;
+  const timeframe = document.getElementById('g-timeframe').value;
+  if (!text) return;
+  S.goals.push({ text, category, timeframe, done: false, at: new Date().toISOString() });
+  document.getElementById('g-text').value = '';
+  renderGoals();
+  renderMetrics();
+  saveState();
+  toast('Goal added');
+}
+function toggleGoal(i) {
+  S.goals[i].done = !S.goals[i].done;
+  renderGoals();
+  renderMetrics();
+  saveState();
+  toast(S.goals[i].done ? 'Goal achieved ✓' : 'Goal reopened');
+}
+function deleteGoal(i) {
+  S.goals.splice(i, 1);
+  renderGoals();
+  renderMetrics();
+  saveState();
+}
+function filterGoals(cat, el) {
+  document.querySelectorAll('#page-goals .cat-tab').forEach(t => t.classList.remove('active'));
+  if (el) el.classList.add('active');
+  S.goalFilter = cat;
+  renderGoals();
+}
+function renderGoals() {
+  const list = document.getElementById('goal-list');
+  let goals = S.goals;
+  if (S.goalFilter !== 'all') goals = goals.filter(g => g.category === S.goalFilter);
+  if (!goals.length) {
+    list.innerHTML = '<div class="empty-state"><div class="empty-icon">🎯</div>No goals yet. Set your first target above.</div>';
+    return;
+  }
+  list.innerHTML = goals.map((g, i) => {
+    const realIdx = S.goals.indexOf(g);
+    return `
+      <div class="goal-item ${g.done ? 'done' : ''}" onclick="toggleGoal(${realIdx})">
+        <div class="goal-check"><span class="goal-check-mark">✓</span></div>
+        <div class="goal-body">
+          <div class="goal-text">${g.text}</div>
+          <div class="goal-meta">${g.timeframe}</div>
+        </div>
+        <div class="goal-category ${g.category}">${g.category}</div>
+        <button class="del-btn" onclick="event.stopPropagation(); deleteGoal(${realIdx})">✕</button>
+      </div>
+    `;
+  }).join('');
+}
+
+// ─── Metrics ─────────────────────────────────────────────
+function renderMetrics() {
+  const done = S.goals.filter(g => g.done).length;
+  document.getElementById('m-streak').textContent = S.streak;
+  document.getElementById('m-saved').textContent = S.savedQuotes.length;
+  document.getElementById('m-goals').textContent = done;
+  document.getElementById('m-journal').textContent = S.journal.length;
+}
+
+// ─── Progress ─────────────────────────────────────────────
+let moodChartInst = null;
+function renderProgress() {
+  const done = S.goals.filter(g => g.done).length;
+  document.getElementById('p-streak').textContent = S.streak;
+  document.getElementById('p-goals-done').textContent = done;
+  document.getElementById('p-journal-count').textContent = S.journal.length;
+  document.getElementById('p-saved').textContent = S.savedQuotes.length;
+
+  // Mood chart
+  const last7 = S.moods.slice(-7);
+  const moodCounts = {};
+  ['Focused','Confident','Cautious','Resilient','Flow'].forEach(m => moodCounts[m] = 0);
+  last7.forEach(m => { if (moodCounts[m.mood] !== undefined) moodCounts[m.mood]++; });
+
+  const ctx = document.getElementById('mood-chart').getContext('2d');
+  if (moodChartInst) moodChartInst.destroy();
+  moodChartInst = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: Object.keys(moodCounts),
+      datasets: [{
+        data: Object.values(moodCounts),
+        backgroundColor: ['#D4AF37','#F0CC55','#A8892A','#7a6420','#D4AF37'],
+        borderRadius: 6,
+        borderSkipped: false,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: true, ticks: { color: '#555', stepSize: 1, font: { size: 11 } }, grid: { color: '#1e1e1e' } },
+        x: { ticks: { color: '#888', font: { size: 11 } }, grid: { display: false } }
+      }
+    }
+  });
+
+  // Goal progress bars
+  const cats = ['trading','mindset','health'];
+  const labels = { trading:'Trading', mindset:'Mindset', health:'Health' };
+  const gp = document.getElementById('goal-progress');
+  gp.innerHTML = cats.map(cat => {
+    const total = S.goals.filter(g => g.category === cat).length;
+    const done = S.goals.filter(g => g.category === cat && g.done).length;
+    const pct = total ? Math.round((done / total) * 100) : 0;
+    return `
+      <div class="progress-wrap">
+        <div class="progress-label">
+          <span class="progress-name">${labels[cat]} (${done}/${total})</span>
+          <span class="progress-pct">${pct}%</span>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+      </div>
+    `;
+  }).join('');
+
+  buildDisciplineGrid();
+}
+
+function buildDisciplineGrid() {
+  const grid = document.getElementById('discipline-grid');
+  if (!grid) return;
+  const cells = [];
+  const today = new Date();
+  const visits = JSON.parse(localStorage.getItem('dcramere-visits') || '[]');
+  for (let i = 27; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    const ds = d.toDateString();
+    const active = visits.includes(ds) || ds === today.toDateString();
+    cells.push(`<div style="height:20px; border-radius:3px; background:${active ? 'var(--gold)' : 'var(--s3)'}; border:1px solid var(--border); title='${ds}'"></div>`);
+  }
+  grid.innerHTML = cells.join('');
+
+  // record today
+  const todayStr = today.toDateString();
+  if (!visits.includes(todayStr)) {
+    visits.push(todayStr);
+    const trimmed = visits.slice(-90);
+    localStorage.setItem('dcramere-visits', JSON.stringify(trimmed));
+  }
+}
+
+// ─── Toast ────────────────────────────────────────────────
+let toastTimer;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 1800);
+}
+
+// ─── Share Studio ─────────────────────────────────────────
+let shareFormat = 'story';   // story | square | post
+let shareTemplate = 'dark';  // dark | minimal | bold
+let shareQuoteIdx = 0;
+
+const FORMAT_DIMS = {
+  story:  { w: 1080, h: 1920, label: 'Story 9:16' },
+  square: { w: 1080, h: 1080, label: 'Square 1:1' },
+  post:   { w: 1080, h: 1350, label: 'Post 4:5'   },
+};
+
+function initSharePage() {
+  const sel = document.getElementById('share-quote-select');
+  sel.innerHTML = QUOTES.map((q, i) =>
+    `<option value="${i}">${q.category} · ${q.text.substring(0, 60)}…</option>`
+  ).join('');
+  shareQuoteIdx = S.quoteIdx;
+  sel.value = shareQuoteIdx;
+  renderShareCanvas();
+}
+
+function setShareFormat(fmt, el) {
+  shareFormat = fmt;
+  document.querySelectorAll('#page-share .two-col .cat-tabs:first-child .cat-tab, #page-share .two-col > div:first-child .cat-tab').forEach(t => t.classList.remove('active'));
+  if (el) el.classList.add('active');
+  renderShareCanvas();
+}
+
+function setShareTemplate(tpl, el) {
+  shareTemplate = tpl;
+  // only toggle tabs in the second cat-tabs group
+  const groups = document.querySelectorAll('#page-share .two-col .cat-tabs');
+  if (groups[1]) groups[1].querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
+  if (el) el.classList.add('active');
+  renderShareCanvas();
+}
+
+function updateSharePreview() {
+  shareQuoteIdx = parseInt(document.getElementById('share-quote-select').value);
+  renderShareCanvas();
+}
+
+function shareQuoteRandom() {
+  shareQuoteIdx = Math.floor(Math.random() * QUOTES.length);
+  document.getElementById('share-quote-select').value = shareQuoteIdx;
+  renderShareCanvas();
+}
+
+function shareCurrentQuote() {
+  shareQuoteIdx = S.quoteIdx;
+  document.getElementById('share-quote-select').value = shareQuoteIdx;
+  renderShareCanvas();
+}
+
+function renderShareCanvas() {
+  const q = QUOTES[shareQuoteIdx];
+  const dim = FORMAT_DIMS[shareFormat];
+  const canvas = document.getElementById('share-canvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = dim.w;
+  canvas.height = dim.h;
+
+  // Scale for display
+  const maxDisplay = 480;
+  const scale = Math.min(maxDisplay / dim.w, 520 / dim.h);
+  canvas.style.width  = Math.round(dim.w * scale) + 'px';
+  canvas.style.height = Math.round(dim.h * scale) + 'px';
+
+  const W = dim.w, H = dim.h;
+
+  if (shareTemplate === 'dark') {
+    drawDarkTemplate(ctx, W, H, q);
+  } else if (shareTemplate === 'minimal') {
+    drawMinimalTemplate(ctx, W, H, q);
+  } else {
+    drawBoldTemplate(ctx, W, H, q);
+  }
+}
+
+// ── Helpers ──────────────────────────────────────────────
+function wrapText(ctx, text, x, y, maxW, lineH) {
+  const words = text.split(' ');
+  let line = '';
+  const lines = [];
+  for (const w of words) {
+    const test = line ? line + ' ' + w : w;
+    if (ctx.measureText(test).width > maxW && line) {
+      lines.push(line);
+      line = w;
+    } else { line = test; }
+  }
+  if (line) lines.push(line);
+  lines.forEach((l, i) => ctx.fillText(l, x, y + i * lineH));
+  return lines.length;
+}
+
+function drawGoldLine(ctx, x, y, w, h) {
+  const grad = ctx.createLinearGradient(x, y, x + w, y);
+  grad.addColorStop(0, '#A8892A');
+  grad.addColorStop(0.5, '#F0CC55');
+  grad.addColorStop(1, 'transparent');
+  ctx.fillStyle = grad;
+  ctx.fillRect(x, y, w, h);
+}
+
+function loadFont(ctx) {
+  // Ensure Cinzel is available via canvas
+  ctx.font = '10px Cinzel';
+  ctx.fillText('', 0, 0);
+}
+
+// ── Template 1: Dark Gold ─────────────────────────────────
+function drawDarkTemplate(ctx, W, H, q) {
+  // BG
+  const bg = ctx.createLinearGradient(0, 0, 0, H);
+  bg.addColorStop(0, '#0B0B0B');
+  bg.addColorStop(1, '#111108');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, W, H);
+
+  // Corner ornament top-right
+  ctx.strokeStyle = '#D4AF3722';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(60, 60, W - 120, H - 120);
+
+  // Gold accent line top
+  drawGoldLine(ctx, 80, 80, 300, 3);
+
+  // Category badge
+  ctx.font = 'bold 28px Inter';
+  ctx.fillStyle = '#A8892A';
+  ctx.letterSpacing = '3px';
+  ctx.fillText(q.category.toUpperCase(), 80, 160);
+  ctx.letterSpacing = '0px';
+
+  // Big quote mark
+  ctx.font = '380px Cinzel';
+  ctx.fillStyle = '#D4AF3710';
+  ctx.fillText('\u201C', W - 300, 460);
+
+  // Quote text
+  const pad = 80;
+  const qY = shareFormat === 'story' ? H * 0.28 : H * 0.30;
+  const fontSize = shareFormat === 'story' ? 68 : shareFormat === 'post' ? 72 : 70;
+  ctx.font = `italic ${fontSize}px Georgia, serif`;
+  ctx.fillStyle = '#EBEBEB';
+  const lines = wrapText(ctx, '\u201C' + q.text + '\u201D', pad, qY, W - pad * 2, fontSize * 1.5);
+
+  // Author
+  const authorY = qY + lines * fontSize * 1.5 + 60;
+  drawGoldLine(ctx, pad, authorY - 20, 120, 2);
+  ctx.font = '500 34px Inter';
+  ctx.fillStyle = '#D4AF37';
+  ctx.letterSpacing = '3px';
+  ctx.fillText(('— ' + q.author).toUpperCase(), pad, authorY + 16);
+  ctx.letterSpacing = '0px';
+
+  // Bottom brand
+  const brandY = H - 140;
+  drawGoldLine(ctx, pad, brandY, W - pad * 2, 1);
+  ctx.font = '600 48px Cinzel';
+  ctx.fillStyle = '#D4AF37';
+  ctx.textAlign = 'center';
+  ctx.fillText('DCRAMERE', W / 2, brandY + 72);
+  ctx.font = '400 24px Inter';
+  ctx.fillStyle = '#7a6420';
+  ctx.letterSpacing = '5px';
+  ctx.fillText('SEE · DECIPHER · TRADE', W / 2, brandY + 108);
+  ctx.letterSpacing = '0px';
+  ctx.textAlign = 'left';
+}
+
+// ── Template 2: Minimal ───────────────────────────────────
+function drawMinimalTemplate(ctx, W, H, q) {
+  // Off-white bg
+  ctx.fillStyle = '#F5F2EA';
+  ctx.fillRect(0, 0, W, H);
+
+  // Gold side bar left
+  ctx.fillStyle = '#D4AF37';
+  ctx.fillRect(0, 0, 12, H);
+
+  // Top label
+  ctx.font = '500 30px Inter';
+  ctx.fillStyle = '#A8892A';
+  ctx.letterSpacing = '4px';
+  ctx.fillText(q.category.toUpperCase(), 60, 120);
+  ctx.letterSpacing = '0px';
+
+  // Divider
+  ctx.strokeStyle = '#D4AF37';
+  ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(60, 140); ctx.lineTo(260, 140); ctx.stroke();
+
+  // Quote
+  const qY = shareFormat === 'story' ? H * 0.25 : H * 0.28;
+  const fontSize = shareFormat === 'story' ? 72 : 78;
+  ctx.font = `italic ${fontSize}px Georgia, serif`;
+  ctx.fillStyle = '#111111';
+  const lines = wrapText(ctx, '\u201C' + q.text + '\u201D', 60, qY, W - 120, fontSize * 1.55);
+
+  // Author
+  const authorY = qY + lines * fontSize * 1.55 + 60;
+  ctx.font = '400 32px Inter';
+  ctx.fillStyle = '#888888';
+  ctx.fillText('— ' + q.author, 60, authorY);
+
+  // Brand bottom
+  const brandY = H - 100;
+  ctx.font = '700 44px Cinzel';
+  ctx.fillStyle = '#0B0B0B';
+  ctx.textAlign = 'center';
+  ctx.fillText('DCRAMERE', W / 2, brandY);
+  ctx.font = '400 22px Inter';
+  ctx.fillStyle = '#A8892A';
+  ctx.letterSpacing = '5px';
+  ctx.fillText('SEE · DECIPHER · TRADE', W / 2, brandY + 42);
+  ctx.letterSpacing = '0px';
+  ctx.textAlign = 'left';
+}
+
+// ── Template 3: Bold ─────────────────────────────────────
+function drawBoldTemplate(ctx, W, H, q) {
+  // Dark bg
+  ctx.fillStyle = '#0E0E0E';
+  ctx.fillRect(0, 0, W, H);
+
+  // Big gold diamond shape (decorative)
+  ctx.save();
+  ctx.translate(W / 2, H * 0.18);
+  ctx.rotate(Math.PI / 4);
+  ctx.strokeStyle = '#D4AF3730';
+  ctx.lineWidth = 3;
+  ctx.strokeRect(-180, -180, 360, 360);
+  ctx.strokeStyle = '#D4AF3715';
+  ctx.strokeRect(-220, -220, 440, 440);
+  ctx.restore();
+
+  // DCRAMERE big behind
+  ctx.font = '700 180px Cinzel';
+  ctx.fillStyle = '#D4AF3708';
+  ctx.textAlign = 'center';
+  ctx.fillText('DCRAMERE', W / 2, H * 0.22);
+  ctx.textAlign = 'left';
+
+  // Category
+  ctx.font = '700 32px Inter';
+  ctx.fillStyle = '#D4AF37';
+  ctx.textAlign = 'center';
+  ctx.letterSpacing = '6px';
+  ctx.fillText(q.category.toUpperCase(), W / 2, H * 0.33);
+  ctx.letterSpacing = '0px';
+
+  // Gold lines around category
+  const catY = H * 0.33;
+  drawGoldLine(ctx, W * 0.1, catY - 28, W * 0.28, 2);
+  const rGrad = ctx.createLinearGradient(W * 0.62, catY, W * 0.9, catY);
+  rGrad.addColorStop(0, 'transparent');
+  rGrad.addColorStop(0.5, '#F0CC55');
+  rGrad.addColorStop(1, '#A8892A');
+  ctx.fillStyle = rGrad;
+  ctx.fillRect(W * 0.62, catY - 28, W * 0.28, 2);
+
+  // Quote
+  const qY = H * 0.40;
+  const fontSize = shareFormat === 'story' ? 65 : 70;
+  ctx.font = `italic ${fontSize}px Georgia, serif`;
+  ctx.fillStyle = '#F0F0F0';
+  ctx.textAlign = 'center';
+  const maxW = W - 160;
+  const words = ('\u201C' + q.text + '\u201D').split(' ');
+  let line = '', lines = [], cx = W / 2;
+  for (const w of words) {
+    const test = line ? line + ' ' + w : w;
+    if (ctx.measureText(test).width > maxW && line) { lines.push(line); line = w; }
+    else { line = test; }
+  }
+  if (line) lines.push(line);
+  lines.forEach((l, i) => ctx.fillText(l, cx, qY + i * fontSize * 1.5));
+  const authorY = qY + lines.length * fontSize * 1.5 + 55;
+
+  // Author
+  ctx.font = '400 32px Inter';
+  ctx.fillStyle = '#D4AF37';
+  ctx.textAlign = 'center';
+  ctx.fillText('— ' + q.author, W / 2, authorY);
+  ctx.textAlign = 'left';
+
+  // Brand
+  const brandY = H - 120;
+  ctx.fillStyle = '#D4AF3740';
+  ctx.fillRect(0, brandY - 30, W, 1);
+  ctx.font = '600 50px Cinzel';
+  ctx.fillStyle = '#D4AF37';
+  ctx.textAlign = 'center';
+  ctx.fillText('DCRAMERE', W / 2, brandY + 30);
+  ctx.font = '400 22px Inter';
+  ctx.fillStyle = '#7a6420';
+  ctx.letterSpacing = '5px';
+  ctx.fillText('SEE · DECIPHER · TRADE', W / 2, brandY + 68);
+  ctx.letterSpacing = '0px';
+  ctx.textAlign = 'left';
+}
+
+// ── Download / Copy ───────────────────────────────────────
+function downloadShareImage() {
+  const canvas = document.getElementById('share-canvas');
+  const q = QUOTES[shareQuoteIdx];
+  const name = 'dcramere-' + q.category.toLowerCase() + '-' + shareFormat + '.png';
+  const link = document.createElement('a');
+  link.download = name;
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+  toast('Image downloaded ⬇');
+}
+
+async function copyShareImage() {
+  try {
+    const canvas = document.getElementById('share-canvas');
+    canvas.toBlob(async blob => {
+      const item = new ClipboardItem({ 'image/png': blob });
+      await navigator.clipboard.write([item]);
+      toast('Image copied ⧉');
+    });
+  } catch(e) {
+    toast('Use Download instead');
+  }
+}
+
+// ── Social openers ────────────────────────────────────────
+const SOCIAL_INFO = {
+  whatsapp:  { name:'WhatsApp',  url:'https://web.whatsapp.com/', instructions:'1. Click <strong>Download image</strong> below — the image saves to your Downloads.<br>2. WhatsApp opens in a new tab.<br>3. Open a chat → click the attachment icon → select your downloaded image.' },
+  facebook:  { name:'Facebook',  url:'https://www.facebook.com/',  instructions:'1. Download the image below.<br>2. Facebook opens in a new tab.<br>3. Create a new post or Story → click the photo icon → upload your image.' },
+  instagram: { name:'Instagram', url:'https://www.instagram.com/', instructions:'1. Download the image below.<br>2. Open Instagram on your <strong>phone</strong> — it opens in a new tab on desktop but posting requires the mobile app.<br>3. Tap + → Post or Story → select your image.' },
+  twitter:   { name:'X (Twitter)', url: null, instructions:'1. Download the image below.<br>2. X opens in a new tab.<br>3. Click the compose button → attach your image → post.' },
+  linkedin:  { name:'LinkedIn',  url:'https://www.linkedin.com/', instructions:'1. Download the image below.<br>2. LinkedIn opens in a new tab.<br>3. Click Start a post → photo icon → upload your image.' },
+  tiktok:    { name:'TikTok',    url:'https://www.tiktok.com/',   instructions:'1. Download the image below.<br>2. Open TikTok on your <strong>phone</strong> for Stories/Posts — the mobile app is required for uploading.<br>3. Tap + → Upload → select your image.' },
+};
+
+function openSocial(platform) {
+  const info = SOCIAL_INFO[platform];
+  // First download the image
+  downloadShareImage();
+  // Show overlay instructions
+  document.getElementById('overlay-title').textContent = 'Share on ' + info.name;
+  document.getElementById('overlay-instructions').innerHTML = info.instructions;
+  document.getElementById('share-overlay').classList.add('show');
+  // Open the platform after short delay
+  setTimeout(() => {
+    let url = info.url;
+    if (platform === 'twitter') {
+      const q = QUOTES[shareQuoteIdx];
+      url = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent('\u201C' + q.text + '\u201D\n— ' + q.author + '\n\n#DCRAMERE #trading #motivation');
+    }
+    if (url) window.open(url, '_blank');
+  }, 400);
+}
+
+function closeShareOverlay() {
+  document.getElementById('share-overlay').classList.remove('show');
+}
+
+// Patch showPage to init share
+const _origShowPage = showPage;
+window.showPage = function(name, tab) {
+  _origShowPage(name, tab);
+  if (name === 'share') initSharePage();
+};
+
+// Boot
+init();
+</script>
+</body>
+</html>
