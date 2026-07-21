@@ -1632,50 +1632,49 @@ function drawMinimalTemplate(ctx, W, H, q) {
 
 // ── Template 3: Bold ─────────────────────────────────────
 function drawBoldTemplate(ctx, W, H, q) {
-  // Flat black bg — high contrast, no gradient
-  ctx.fillStyle = '#0A0A0A';
+  // Deep black bg with a soft, refined vignette — not flat, not blocky
+  const bg = ctx.createRadialGradient(W / 2, H * 0.22, 40, W / 2, H * 0.5, H * 0.8);
+  bg.addColorStop(0, '#141210');
+  bg.addColorStop(1, '#0A0A09');
+  ctx.fillStyle = bg;
   ctx.fillRect(0, 0, W, H);
 
-  // Thick solid gold top bar (poster edge, not a thin accent line)
-  const topBarH = Math.round(H * 0.014);
-  ctx.fillStyle = '#D4AF37';
-  ctx.fillRect(0, 0, W, topBarH);
+  // Thin gallery-label frame, inset from the edge
+  const inset = Math.round(W * 0.052);
+  ctx.strokeStyle = '#D4AF3733';
+  ctx.lineWidth = 1.5;
+  ctx.strokeRect(inset, inset, W - inset * 2, H - inset * 2);
 
-  // Big flat quote-mark graphic, top-right — bold not faint
-  ctx.font = `700 ${Math.round(H * 0.17)}px Cinzel`;
-  ctx.fillStyle = '#D4AF3712';
-  ctx.textAlign = 'right';
-  ctx.fillText('\u201D', W - 60, H * 0.24);
-  ctx.textAlign = 'left';
-
-  // Category — solid filled badge, black text on gold (reversed, poster-label look)
-  ctx.font = '800 30px Inter';
-  const catLabel = q.category.toUpperCase();
-  ctx.letterSpacing = '4px';
-  const catTextW = ctx.measureText(catLabel).width;
-  const catPadX = 28, catPadY = 20;
-  const badgeW = catTextW + catPadX * 2;
-  const badgeH = 30 + catPadY * 2;
-  const badgeX = 80, badgeY = H * 0.09;
-  ctx.letterSpacing = '0px';
-  ctx.fillStyle = '#D4AF37';
-  ctx.fillRect(badgeX, badgeY, badgeW, badgeH);
-  ctx.font = '800 30px Inter';
-  ctx.fillStyle = '#0A0A0A';
-  ctx.letterSpacing = '4px';
-  ctx.fillText(catLabel, badgeX + catPadX, badgeY + badgeH - catPadY - 4);
-  ctx.letterSpacing = '0px';
-
-  // Quote — bold heavy sans, not italic serif, centered, tight leading
-  const pad = 80;
-  const qY = badgeY + badgeH + (shareFormat === 'square' ? 90 : 130);
-  const fontSize = shareFormat === 'story' ? 74 : shareFormat === 'post' ? 78 : 62;
-  const lineH = fontSize * 1.22;
-  ctx.font = `900 ${fontSize}px Inter, sans-serif`;
-  ctx.fillStyle = '#F5F5F5';
+  // Delicate ornamental quotation mark, centered, refined not oversized
+  ctx.font = `600 ${Math.round(H * 0.07)}px Cinzel`;
+  ctx.fillStyle = '#D4AF3766';
   ctx.textAlign = 'center';
-  const maxW = W - pad * 2;
-  const words = ('\u201C' + q.text + '\u201D').split(' ');
+  ctx.fillText('“', W / 2, H * 0.185);
+
+  // Category — small refined letter-spaced caps, flanked by hairline rules
+  const catY = H * 0.225;
+  ctx.font = '500 24px Inter';
+  const catLabel = q.category.toUpperCase();
+  ctx.letterSpacing = '5px';
+  const catW = ctx.measureText(catLabel).width;
+  ctx.fillStyle = '#D4AF37';
+  ctx.fillText(catLabel, W / 2, catY);
+  ctx.letterSpacing = '0px';
+  ctx.textAlign = 'left';
+  const ruleGap = 28, ruleW = W * 0.16;
+  ctx.fillStyle = '#D4AF3755';
+  ctx.fillRect(W / 2 - catW / 2 - ruleGap - ruleW, catY - 8, ruleW, 1);
+  ctx.fillRect(W / 2 + catW / 2 + ruleGap, catY - 8, ruleW, 1);
+
+  // Quote — elegant italic serif, centered, generous leading
+  const qY = H * (shareFormat === 'square' ? 0.36 : 0.33);
+  const fontSize = shareFormat === 'story' ? 66 : shareFormat === 'post' ? 68 : 56;
+  const lineH = fontSize * 1.5;
+  ctx.font = `italic 400 ${fontSize}px Georgia, serif`;
+  ctx.fillStyle = '#F2F0EA';
+  ctx.textAlign = 'center';
+  const maxW = W - inset * 2 - 100;
+  const words = ('“' + q.text + '”').split(' ');
   let line = '', lines = [];
   for (const w of words) {
     const test = line ? line + ' ' + w : w;
@@ -1685,35 +1684,40 @@ function drawBoldTemplate(ctx, W, H, q) {
   if (line) lines.push(line);
   lines.forEach((l, i) => ctx.fillText(l, W / 2, qY + i * lineH));
 
-  // Solid gold rule + author, directly under the quote
-  const ruleY = qY + lines.length * lineH + 46;
+  // Hairline rule + author, in refined small caps
+  const ruleY = qY + lines.length * lineH + 44;
   ctx.fillStyle = '#D4AF37';
-  ctx.fillRect(W / 2 - 45, ruleY, 90, 6);
-  ctx.font = '700 32px Inter';
-  ctx.fillStyle = '#D4AF37';
-  ctx.letterSpacing = '3px';
-  ctx.fillText(('— ' + q.author).toUpperCase(), W / 2, ruleY + 58);
+  ctx.fillRect(W / 2 - 30, ruleY, 60, 1);
+  ctx.font = '500 26px Inter';
+  ctx.fillStyle = '#C9A94A';
+  ctx.letterSpacing = '4px';
+  ctx.fillText(('— ' + q.author).toUpperCase(), W / 2, ruleY + 48);
   ctx.letterSpacing = '0px';
   ctx.textAlign = 'left';
 
-  // Bottom stamp — solid gold band, black wordmark reversed inside it
-  const bandH = Math.round(H * 0.1);
-  const bandY = H - bandH - Math.round(H * 0.055);
+  // Bottom mark — refined, no solid block: hairline rule, elegant wordmark, small tagline
+  const brandY = H - inset - 64;
+  ctx.strokeStyle = '#D4AF3744';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(W / 2 - 70, brandY - 34);
+  ctx.lineTo(W / 2 + 70, brandY - 34);
+  ctx.stroke();
+  ctx.font = '600 38px Cinzel';
   ctx.fillStyle = '#D4AF37';
-  ctx.fillRect(0, bandY, W, bandH);
-  ctx.font = '700 52px Cinzel';
-  ctx.fillStyle = '#0A0A0A';
   ctx.textAlign = 'center';
-  ctx.fillText('DCRAMERE', W / 2, bandY + bandH / 2 + 18);
-
-  // Tagline below the band, gold on black
-  ctx.font = '600 22px Inter';
-  ctx.fillStyle = '#D4AF37';
-  ctx.letterSpacing = '5px';
-  ctx.fillText('SEE · DECIPHER · TRADE', W / 2, bandY + bandH + 42);
+  ctx.letterSpacing = '2px';
+  ctx.fillText('DCRAMERE', W / 2, brandY);
+  ctx.letterSpacing = '0px';
+  ctx.font = '400 18px Inter';
+  ctx.fillStyle = '#8a7327';
+  ctx.letterSpacing = '4px';
+  ctx.fillText('SEE · DECIPHER · TRADE', W / 2, brandY + 32);
   ctx.letterSpacing = '0px';
   ctx.textAlign = 'left';
 }
+
+// ── Download / Copy ───────────────────────────────────────
 
 // ── Download / Copy ───────────────────────────────────────
 
