@@ -6,7 +6,7 @@
 <title>DCRAMERE — Daily Motivation</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
 /* ─── Tokens ──────────────────────────────────────────── */
@@ -1632,88 +1632,91 @@ function drawMinimalTemplate(ctx, W, H, q) {
 
 // ── Template 3: Bold ─────────────────────────────────────
 function drawBoldTemplate(ctx, W, H, q) {
-  // Dark bg
-  ctx.fillStyle = '#0E0E0E';
+  // Flat black bg — high contrast, no gradient
+  ctx.fillStyle = '#0A0A0A';
   ctx.fillRect(0, 0, W, H);
 
-  // Big gold diamond shape (decorative)
-  ctx.save();
-  ctx.translate(W / 2, H * 0.18);
-  ctx.rotate(Math.PI / 4);
-  ctx.strokeStyle = '#D4AF3730';
-  ctx.lineWidth = 3;
-  ctx.strokeRect(-180, -180, 360, 360);
-  ctx.strokeStyle = '#D4AF3715';
-  ctx.strokeRect(-220, -220, 440, 440);
-  ctx.restore();
+  // Thick solid gold top bar (poster edge, not a thin accent line)
+  const topBarH = Math.round(H * 0.014);
+  ctx.fillStyle = '#D4AF37';
+  ctx.fillRect(0, 0, W, topBarH);
 
-  // DCRAMERE big behind
-  ctx.font = '700 180px Cinzel';
-  ctx.fillStyle = '#D4AF3708';
-  ctx.textAlign = 'center';
-  ctx.fillText('DCRAMERE', W / 2, H * 0.22);
+  // Big flat quote-mark graphic, top-right — bold not faint
+  ctx.font = `700 ${Math.round(H * 0.17)}px Cinzel`;
+  ctx.fillStyle = '#D4AF3712';
+  ctx.textAlign = 'right';
+  ctx.fillText('\u201D', W - 60, H * 0.24);
   ctx.textAlign = 'left';
 
-  // Category
-  ctx.font = '700 32px Inter';
+  // Category — solid filled badge, black text on gold (reversed, poster-label look)
+  ctx.font = '800 30px Inter';
+  const catLabel = q.category.toUpperCase();
+  ctx.letterSpacing = '4px';
+  const catTextW = ctx.measureText(catLabel).width;
+  const catPadX = 28, catPadY = 20;
+  const badgeW = catTextW + catPadX * 2;
+  const badgeH = 30 + catPadY * 2;
+  const badgeX = 80, badgeY = H * 0.09;
+  ctx.letterSpacing = '0px';
   ctx.fillStyle = '#D4AF37';
-  ctx.textAlign = 'center';
-  ctx.letterSpacing = '6px';
-  ctx.fillText(q.category.toUpperCase(), W / 2, H * 0.33);
+  ctx.fillRect(badgeX, badgeY, badgeW, badgeH);
+  ctx.font = '800 30px Inter';
+  ctx.fillStyle = '#0A0A0A';
+  ctx.letterSpacing = '4px';
+  ctx.fillText(catLabel, badgeX + catPadX, badgeY + badgeH - catPadY - 4);
   ctx.letterSpacing = '0px';
 
-  // Gold lines around category
-  const catY = H * 0.33;
-  drawGoldLine(ctx, W * 0.1, catY - 28, W * 0.28, 2);
-  const rGrad = ctx.createLinearGradient(W * 0.62, catY, W * 0.9, catY);
-  rGrad.addColorStop(0, 'transparent');
-  rGrad.addColorStop(0.5, '#F0CC55');
-  rGrad.addColorStop(1, '#A8892A');
-  ctx.fillStyle = rGrad;
-  ctx.fillRect(W * 0.62, catY - 28, W * 0.28, 2);
-
-  // Quote
-  const qY = H * 0.40;
-  const fontSize = shareFormat === 'story' ? 65 : 70;
-  ctx.font = `italic ${fontSize}px Georgia, serif`;
-  ctx.fillStyle = '#F0F0F0';
+  // Quote — bold heavy sans, not italic serif, centered, tight leading
+  const pad = 80;
+  const qY = badgeY + badgeH + (shareFormat === 'square' ? 90 : 130);
+  const fontSize = shareFormat === 'story' ? 74 : shareFormat === 'post' ? 78 : 62;
+  const lineH = fontSize * 1.22;
+  ctx.font = `900 ${fontSize}px Inter, sans-serif`;
+  ctx.fillStyle = '#F5F5F5';
   ctx.textAlign = 'center';
-  const maxW = W - 160;
+  const maxW = W - pad * 2;
   const words = ('\u201C' + q.text + '\u201D').split(' ');
-  let line = '', lines = [], cx = W / 2;
+  let line = '', lines = [];
   for (const w of words) {
     const test = line ? line + ' ' + w : w;
     if (ctx.measureText(test).width > maxW && line) { lines.push(line); line = w; }
     else { line = test; }
   }
   if (line) lines.push(line);
-  lines.forEach((l, i) => ctx.fillText(l, cx, qY + i * fontSize * 1.5));
-  const authorY = qY + lines.length * fontSize * 1.5 + 55;
+  lines.forEach((l, i) => ctx.fillText(l, W / 2, qY + i * lineH));
 
-  // Author
-  ctx.font = '400 32px Inter';
+  // Solid gold rule + author, directly under the quote
+  const ruleY = qY + lines.length * lineH + 46;
   ctx.fillStyle = '#D4AF37';
-  ctx.textAlign = 'center';
-  ctx.fillText('— ' + q.author, W / 2, authorY);
+  ctx.fillRect(W / 2 - 45, ruleY, 90, 6);
+  ctx.font = '700 32px Inter';
+  ctx.fillStyle = '#D4AF37';
+  ctx.letterSpacing = '3px';
+  ctx.fillText(('— ' + q.author).toUpperCase(), W / 2, ruleY + 58);
+  ctx.letterSpacing = '0px';
   ctx.textAlign = 'left';
 
-  // Brand
-  const brandY = H - 120;
-  ctx.fillStyle = '#D4AF3740';
-  ctx.fillRect(0, brandY - 30, W, 1);
-  ctx.font = '600 50px Cinzel';
+  // Bottom stamp — solid gold band, black wordmark reversed inside it
+  const bandH = Math.round(H * 0.1);
+  const bandY = H - bandH - Math.round(H * 0.055);
   ctx.fillStyle = '#D4AF37';
+  ctx.fillRect(0, bandY, W, bandH);
+  ctx.font = '700 52px Cinzel';
+  ctx.fillStyle = '#0A0A0A';
   ctx.textAlign = 'center';
-  ctx.fillText('DCRAMERE', W / 2, brandY + 30);
-  ctx.font = '400 22px Inter';
-  ctx.fillStyle = '#7a6420';
+  ctx.fillText('DCRAMERE', W / 2, bandY + bandH / 2 + 18);
+
+  // Tagline below the band, gold on black
+  ctx.font = '600 22px Inter';
+  ctx.fillStyle = '#D4AF37';
   ctx.letterSpacing = '5px';
-  ctx.fillText('SEE · DECIPHER · TRADE', W / 2, brandY + 68);
+  ctx.fillText('SEE · DECIPHER · TRADE', W / 2, bandY + bandH + 42);
   ctx.letterSpacing = '0px';
   ctx.textAlign = 'left';
 }
 
 // ── Download / Copy ───────────────────────────────────────
+
 function downloadShareImage() {
   const canvas = document.getElementById('share-canvas');
   const q = QUOTES[shareQuoteIdx];
