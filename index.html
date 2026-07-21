@@ -605,6 +605,10 @@ select.field option { background: var(--s2); color: var(--text); }
         <button class="btn btn-gold" onclick="saveQuote()">★ &nbsp;Save quote</button>
         <button class="btn" onclick="copyQuote()">⧉ &nbsp;Copy</button>
       </div>
+      <div class="quote-actions" style="margin-top:8px;">
+        <button class="btn btn-gold" onclick="shareTodayAs('story')">📤 &nbsp;Share as Story</button>
+        <button class="btn btn-gold" onclick="shareTodayAs('post')">📤 &nbsp;Share as Post</button>
+      </div>
       <div style="margin-top:10px; font-size:10px; color:var(--text-muted); letter-spacing:1px;" id="cms-status">● Loading…</div>
     </div>
 
@@ -1813,6 +1817,14 @@ function shareAs(format) {
   } else {
     downloadShareImage();
   }
+}
+
+// Same as shareAs(), but forces today's actual quote first — used by the
+// Today page so it always shares the real daily motivation, regardless of
+// whatever quote may be selected in the separate Share Studio picker.
+function shareTodayAs(format) {
+  shareQuoteIdx = S.quoteIdx;
+  shareAs(format);
 }
 
 function closeShareOverlay() {
