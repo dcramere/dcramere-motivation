@@ -862,7 +862,8 @@ select.field option { background: var(--s2); color: var(--text); }
     <div class="card gold-border">
       <div class="eyebrow" style="margin-bottom:0.75rem">Download &amp; share</div>
       <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:1rem;">
-        <button class="btn btn-gold" id="btn-native-share" style="display:none" onclick="shareNative()">📤 Share…</button>
+        <button class="btn btn-gold" onclick="shareAs('story')">📤 Share as Story</button>
+        <button class="btn btn-gold" onclick="shareAs('post')">📤 Share as Post</button>
         <button class="btn btn-solid" onclick="downloadShareImage()">⬇ Download image</button>
         <button class="btn btn-gold" onclick="copyShareImage()">⧉ Copy image</button>
       </div>
@@ -894,7 +895,7 @@ select.field option { background: var(--s2); color: var(--text); }
         </button>
       </div>
       <div style="margin-top:10px; font-size:11px; color:var(--text-muted); line-height:1.6;">
-        "Share…" opens your device's native share sheet with the image attached (best on mobile). The platform buttons open a real share/post window pre-filled with the quote — for image posts on Facebook/LinkedIn, download the image first and attach it manually. Instagram &amp; TikTok have no web share option, so those still require downloading the image and posting from the mobile app.
+"Share as Story" / "Share as Post" switch the image to that format and open your device's native share sheet with it attached (best on mobile) — or download it straight away if your browser doesn't support native sharing. The platform buttons below open a real share/post window pre-filled with the quote, using whichever format is selected above — for image posts on Facebook/LinkedIn, download the image first and attach it manually. Instagram &amp; TikTok have no web share option, so those still require downloading the image and posting from the mobile app.
       </div>
     </div>
   </div>
@@ -1425,9 +1426,6 @@ function initSharePage() {
   shareQuoteIdx = S.quoteIdx;
   sel.value = shareQuoteIdx;
   renderShareCanvas();
-
-  const nativeBtn = document.getElementById('btn-native-share');
-  if (nativeBtn) nativeBtn.style.display = (typeof navigator.share === 'function') ? '' : 'none';
 }
 
 function setShareFormat(fmt, el) {
@@ -1801,6 +1799,19 @@ async function shareNative() {
     await navigator.share(shareData);
   } catch (e) {
     if (e.name !== 'AbortError') toast('Share unavailable here — use Download instead');
+  }
+}
+
+// Switches to the requested format, then shares it immediately — native share
+// sheet on mobile (image attached), or a straight download as a fallback.
+function shareAs(format) {
+  const tabIdx = format === 'story' ? 0 : format === 'square' ? 1 : 2;
+  const tabEl = document.querySelectorAll('#page-share .two-col .cat-tabs')[0].children[tabIdx];
+  setShareFormat(format, tabEl);
+  if (typeof navigator.share === 'function') {
+    shareNative();
+  } else {
+    downloadShareImage();
   }
 }
 
