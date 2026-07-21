@@ -1751,7 +1751,9 @@ function buildShareText(q) {
 }
 
 function sharePageUrl() {
-  return location.origin + location.pathname;
+  // Points at the Gumroad listing, not the live app URL — the app itself
+  // isn't password-protected, so shared links shouldn't hand out free access.
+  return 'https://dcramere.gumroad.com/l/dcramere-app';
 }
 
 // Platforms with a real web share/compose endpoint open that directly, pre-filled.
