@@ -862,6 +862,7 @@ select.field option { background: var(--s2); color: var(--text); }
     <div class="card gold-border">
       <div class="eyebrow" style="margin-bottom:0.75rem">Download &amp; share</div>
       <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:1rem;">
+        <button class="btn btn-gold" id="btn-native-share" style="display:none" onclick="shareNative()">📤 Share…</button>
         <button class="btn btn-solid" onclick="downloadShareImage()">⬇ Download image</button>
         <button class="btn btn-gold" onclick="copyShareImage()">⧉ Copy image</button>
       </div>
@@ -893,7 +894,7 @@ select.field option { background: var(--s2); color: var(--text); }
         </button>
       </div>
       <div style="margin-top:10px; font-size:11px; color:var(--text-muted); line-height:1.6;">
-        Download the image first, then paste it when the platform opens. Instagram &amp; TikTok require the mobile app.
+        "Share…" opens your device's native share sheet with the image attached (best on mobile). The platform buttons open a real share/post window pre-filled with the quote — for image posts on Facebook/LinkedIn, download the image first and attach it manually. Instagram &amp; TikTok have no web share option, so those still require downloading the image and posting from the mobile app.
       </div>
     </div>
   </div>
@@ -931,9 +932,9 @@ const S = {
 };
 
 // ─── Sanity CMS config ────────────────────────────────────
-// After completing Sanity setup, replace YOUR_PROJECT_ID below.
+// After completing Sanity setup, replace 2qn8hnx1 below.
 // Leave SANITY_DATASET as 'production' unless you created a different one.
-const SANITY_PROJECT_ID = 'YOUR_PROJECT_ID';
+const SANITY_PROJECT_ID = '2qn8hnx1';
 const SANITY_DATASET    = 'production';
 const SANITY_API_VER    = '2024-01-01';
 
@@ -1424,6 +1425,9 @@ function initSharePage() {
   shareQuoteIdx = S.quoteIdx;
   sel.value = shareQuoteIdx;
   renderShareCanvas();
+
+  const nativeBtn = document.getElementById('btn-native-share');
+  if (nativeBtn) nativeBtn.style.display = (typeof navigator.share === 'function') ? '' : 'none';
 }
 
 function setShareFormat(fmt, el) {
@@ -1735,32 +1739,60 @@ async function copyShareImage() {
 }
 
 // ── Social openers ────────────────────────────────────────
+function buildShareText(q) {
+  return encodeURIComponent('\u201C' + q.text + '\u201D\n— ' + q.author + '\n\n#DCRAMERE #trading #motivation');
+}
+
+function sharePageUrl() {
+  return location.origin + location.pathname;
+}
+
+// Platforms with a real web share/compose endpoint open that directly, pre-filled.
+// Instagram/TikTok have no such endpoint — they only accept posts from their mobile app,
+// so those fall back to: download the image, then open the app to attach it manually.
 const SOCIAL_INFO = {
-  whatsapp:  { name:'WhatsApp',  url:'https://web.whatsapp.com/', instructions:'1. Click <strong>Download image</strong> below — the image saves to your Downloads.<br>2. WhatsApp opens in a new tab.<br>3. Open a chat → click the attachment icon → select your downloaded image.' },
-  facebook:  { name:'Facebook',  url:'https://www.facebook.com/',  instructions:'1. Download the image below.<br>2. Facebook opens in a new tab.<br>3. Create a new post or Story → click the photo icon → upload your image.' },
-  instagram: { name:'Instagram', url:'https://www.instagram.com/', instructions:'1. Download the image below.<br>2. Open Instagram on your <strong>phone</strong> — it opens in a new tab on desktop but posting requires the mobile app.<br>3. Tap + → Post or Story → select your image.' },
-  twitter:   { name:'X (Twitter)', url: null, instructions:'1. Download the image below.<br>2. X opens in a new tab.<br>3. Click the compose button → attach your image → post.' },
-  linkedin:  { name:'LinkedIn',  url:'https://www.linkedin.com/', instructions:'1. Download the image below.<br>2. LinkedIn opens in a new tab.<br>3. Click Start a post → photo icon → upload your image.' },
-  tiktok:    { name:'TikTok',    url:'https://www.tiktok.com/',   instructions:'1. Download the image below.<br>2. Open TikTok on your <strong>phone</strong> for Stories/Posts — the mobile app is required for uploading.<br>3. Tap + → Upload → select your image.' },
+  whatsapp:  { name:'WhatsApp',   needsImage:false, shareUrl:(q,url) => 'https://wa.me/?text=' + buildShareText(q) + '%0A' + encodeURIComponent(url) },
+  facebook:  { name:'Facebook',   needsImage:true,  shareUrl:(q,url) => 'https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(url) + '&quote=' + buildShareText(q) },
+  twitter:   { name:'X (Twitter)', needsImage:false, shareUrl:(q,url) => 'https://twitter.com/intent/tweet?text=' + buildShareText(q) + '&url=' + encodeURIComponent(url) },
+  linkedin:  { name:'LinkedIn',   needsImage:true,  shareUrl:(q,url) => 'https://www.linkedin.com/sharing/share-offsite/?url=' + encodeURIComponent(url) },
+  instagram: { name:'Instagram',  needsImage:true,  shareUrl:null, appUrl:'https://www.instagram.com/', instructions:'1. Download the image below.<br>2. Instagram opens — posting requires the <strong>mobile app</strong>.<br>3. Tap + → Post or Story → select your downloaded image.' },
+  tiktok:    { name:'TikTok',     needsImage:true,  shareUrl:null, appUrl:'https://www.tiktok.com/',    instructions:'1. Download the image below.<br>2. TikTok opens — posting requires the <strong>mobile app</strong>.<br>3. Tap + → Upload → select your downloaded image.' },
 };
 
 function openSocial(platform) {
   const info = SOCIAL_INFO[platform];
-  // First download the image
-  downloadShareImage();
-  // Show overlay instructions
-  document.getElementById('overlay-title').textContent = 'Share on ' + info.name;
-  document.getElementById('overlay-instructions').innerHTML = info.instructions;
-  document.getElementById('share-overlay').classList.add('show');
-  // Open the platform after short delay
-  setTimeout(() => {
-    let url = info.url;
-    if (platform === 'twitter') {
-      const q = QUOTES[shareQuoteIdx];
-      url = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent('\u201C' + q.text + '\u201D\n— ' + q.author + '\n\n#DCRAMERE #trading #motivation');
+  const q = QUOTES[shareQuoteIdx];
+
+  if (!info.shareUrl) {
+    // No web share endpoint exists for this platform — download + hand off to the app.
+    downloadShareImage();
+    document.getElementById('overlay-title').textContent = 'Share on ' + info.name;
+    document.getElementById('overlay-instructions').innerHTML = info.instructions;
+    document.getElementById('share-overlay').classList.add('show');
+    setTimeout(() => window.open(info.appUrl, '_blank'), 400);
+    return;
+  }
+
+  if (info.needsImage) downloadShareImage();
+  window.open(info.shareUrl(q, sharePageUrl()), '_blank', 'noopener,width=600,height=650');
+}
+
+// True native share: hands the actual rendered image + quote to the OS share sheet,
+// which lists the real installed apps (Instagram, TikTok, WhatsApp, Messages, etc.)
+async function shareNative() {
+  const canvas = document.getElementById('share-canvas');
+  const q = QUOTES[shareQuoteIdx];
+  try {
+    const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
+    const file = new File([blob], 'dcramere-quote.png', { type: 'image/png' });
+    const shareData = { title: 'DCRAMERE', text: decodeURIComponent(buildShareText(q)), url: sharePageUrl() };
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      shareData.files = [file];
     }
-    if (url) window.open(url, '_blank');
-  }, 400);
+    await navigator.share(shareData);
+  } catch (e) {
+    if (e.name !== 'AbortError') toast('Share unavailable here — use Download instead');
+  }
 }
 
 function closeShareOverlay() {
